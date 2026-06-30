@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>ERP Prensas — Producción + Avance V6.6</title>
+<title>ERP Prensas — iPhone V6.4.1</title>
 <meta name="theme-color" content="#07111f">
 <meta name="color-scheme" content="dark">
 <style>
@@ -906,6 +906,7 @@
 }
 
 </style>
+<meta name="erp-version" content="iPhone-v6.4.1-a1a3-index-only">
 </head>
 
 <body class="license-locked">
@@ -1136,7 +1137,7 @@ const BACKEND_TOKEN = "GM2026_ALUTIONS_SUPER_TOKEN";
    La APK de Producción y la App Admin comparten la misma base Firebase.
 */
 const LICENSE_APP_ID = "ERP_PRENSAS";
-const LICENSE_CACHE_KEY = "erp_prensas_license_v65_firebase";
+const LICENSE_CACHE_KEY = "erp_prensas_license_v64_firebase";
 const LICENSE_OFFLINE_MS = 72 * 60 * 60 * 1000;
 const LICENSE_ROOT = "licencias_erp_prensas";
 let licenseUnlocked = false;
@@ -2188,5 +2189,14 @@ elFecha.value=fechaSel; setViewMode(viewMode); refreshAllMulti(); /* cargarProd(
   setTimeout(forceAndroidScroll, 1200);
 })();
 </script>
+
+<script>
+// iPhone index-only update: keeps same link and same license/device.
+// Does not unregister the PWA; only asks existing service worker to check for updates.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.getRegistration().then(function(reg){ if(reg) reg.update().catch(function(){}); });
+}
+</script>
 </body>
 </html>
+
