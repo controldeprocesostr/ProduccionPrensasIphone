@@ -2,22 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-<title>ERP Prensas</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>ERP Prensas — Producción + Avance V6.6</title>
 <meta name="theme-color" content="#07111f">
 <meta name="color-scheme" content="dark">
-
-<!-- iPhone / PWA GitHub Pages -->
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ERP Prensas">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="ERP Prensas">
-<meta name="format-detection" content="telephone=no">
 <style>
   :root{
     --bg1:#07121f; --bg2:#081b2c; --bg3:#0a2f45;
@@ -52,7 +40,7 @@
   .pillBtn:hover,.btn:hover,.msBtn:hover,.btnMini:hover,.close:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(0,0,0,.28)}
   .pillBtn.active{background:linear-gradient(180deg, rgba(73,183,255,.24), rgba(73,183,255,.12));border-color:rgba(73,183,255,.48);box-shadow:0 0 0 1px rgba(73,183,255,.15),0 12px 26px rgba(73,183,255,.15)}
   #tabProd,#tabAdv{flex:1 1 180px}
-  #btnA3Prod,#btnAllProd,#btnAdvA3,#btnVistaDash,#btnVistaCards{min-width:84px}
+  #btnA1Prod,#btnA3Prod,#btnAdvA1,#btnAdvA3,#btnVistaDash,#btnVistaCards{min-width:84px}
   .controlsWrap,.advBox,.kpiWrap,.contentCard{padding:14px}
   .controls{display:grid;grid-template-columns:1fr 1fr 1.25fr 1fr;gap:10px;align-items:center}
   .btn,input[type=date],input[type=text],select,.msBtn{width:100%;padding:14px 12px;border-radius:18px;font-weight:950;font-size:14px;min-width:0;min-height:52px}
@@ -89,7 +77,7 @@
   .loading{position:fixed;inset:0;display:none;z-index:10000;background:rgba(4,12,22,.55);backdrop-filter:blur(4px)}
   .loadingCard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,280px);padding:18px;border-radius:24px;border:1px solid rgba(73,183,255,.22);background:linear-gradient(180deg,rgba(8,22,36,.96),rgba(11,29,48,.90));box-shadow:0 30px 70px rgba(0,0,0,.45);text-align:center}
   .spinner{width:42px;height:42px;border-radius:50%;margin:0 auto 12px;border:4px solid rgba(255,255,255,.14);border-top-color:var(--acc);animation:spin 1s linear infinite}
-  .loadingCard .t{font-size:16px;font-weight:1000}.loadingCard .s{font-size:12px;color:var(--mut);margin-top:6px}
+  .loadingCard .t{font-size:16px;font-weight:1000}.loadingCard .s{display:none}
   @keyframes spin{to{transform:rotate(360deg)}}
   @media(max-width:900px){
     .app{padding:8px;gap:8px}
@@ -98,7 +86,7 @@
     .rightTop{width:100%;min-width:0;align-items:stretch}
     .tabs{justify-content:flex-start}
     #tabProd,#tabAdv{flex:1 1 calc(50% - 4px)}
-    #btnA3Prod,#btnAllProd{flex:1 1 calc(50% - 4px)}
+    #btnA1Prod,#btnA3Prod{flex:1 1 calc(50% - 4px)}
     .controls{grid-template-columns:1fr 1fr}
     .prodSummary,.kpis,.filtersGrid{grid-template-columns:1fr 1fr}
     .cards{grid-template-columns:1fr}
@@ -394,7 +382,7 @@
     gap:7px !important;
     width:100% !important;
   }
-  #btnA3Prod,#btnAllProd{display:flex;}
+  #btnA1Prod,#btnA3Prod{display:flex;}
   .pillBtn{
     min-height:40px !important;
     height:40px !important;
@@ -900,6 +888,23 @@
   .licenseMsg{display:none;margin-top:12px;padding:12px;border-radius:18px;border:1px solid rgba(255,182,73,.26);background:rgba(255,182,73,.10);font-size:13px;font-weight:900;line-height:1.35}.licenseMsg.ok{border-color:rgba(43,214,123,.3);background:rgba(43,214,123,.12)}.licenseMsg.bad{border-color:rgba(255,103,132,.32);background:rgba(255,103,132,.12)}
   @media (max-width:520px){.licenseGate{padding:12px}.licenseBox{padding:15px;border-radius:24px}.licenseTitle{font-size:21px}.licenseInput{font-size:18px;letter-spacing:1px}.licenseRow button{flex-basis:100%}}
 
+
+
+/* V6.6: filtros A1/A3 compactos sin botón TODAS */
+#btnA1Prod,#btnA3Prod,#btnAdvA1,#btnAdvA3{display:inline-flex;align-items:center;justify-content:center;}
+#btnA1Prod.active,#btnA3Prod.active,#btnAdvA1.active,#btnAdvA3.active{box-shadow:0 0 0 2px rgba(73,183,255,.20), inset 0 0 0 1px rgba(255,255,255,.06)}
+@media(max-width:900px){
+  .top{padding:12px 12px 10px;}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  #tabProd,#tabAdv,#btnA1Prod,#btnA3Prod{width:100%;min-height:48px;}
+  .controlsWrap{padding:8px;}
+  .controls{grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+  .btn,input[type=date]{min-height:48px;font-size:13px;}
+}
+@media(max-width:520px){
+  .controls{grid-template-columns:1fr 1fr;}
+}
+
 </style>
 </head>
 
@@ -953,8 +958,8 @@
       <div class="tabs">
         <button id="tabProd" class="pillBtn active">PRODUCCIÓN</button>
         <button id="tabAdv" class="pillBtn">AVANCE &amp; PENDIENTE</button>
+        <button id="btnA1Prod" class="pillBtn">A1</button>
         <button id="btnA3Prod" class="pillBtn">A3</button>
-        <button id="btnAllProd" class="pillBtn active">TODAS</button>
       </div>
       <div class="dateBadge" id="badgeDate">—</div>
     </div>
@@ -1013,6 +1018,7 @@
         <input id="txtBuscarAdv" type="text" class="btn" placeholder="Buscar ORDEN / DIENUM / RUTA..." />
       </div>
       <div class="advActions">
+        <button class="pillBtn" id="btnAdvA1">A1</button>
         <button class="pillBtn" id="btnAdvA3">A3</button>
         <div class="actionsRight">
           <button class="pillBtn" id="btnClearFilters">LIMPIAR FILTROS</button>
@@ -1101,7 +1107,7 @@
   <div class="loadingCard">
     <div class="spinner"></div>
     <div class="t" id="loadingTitle">Cargando información</div>
-    <div class="s" id="loadingSub">Consultando servicios y preparando la vista…</div>
+    <div class="s" id="loadingSub"></div>
   </div>
 </div>
 
@@ -1130,7 +1136,7 @@ const BACKEND_TOKEN = "GM2026_ALUTIONS_SUPER_TOKEN";
    La APK de Producción y la App Admin comparten la misma base Firebase.
 */
 const LICENSE_APP_ID = "ERP_PRENSAS";
-const LICENSE_CACHE_KEY = "erp_prensas_license_v64_firebase";
+const LICENSE_CACHE_KEY = "erp_prensas_license_v65_firebase";
 const LICENSE_OFFLINE_MS = 72 * 60 * 60 * 1000;
 const LICENSE_ROOT = "licencias_erp_prensas";
 let licenseUnlocked = false;
@@ -1280,6 +1286,31 @@ function licenseSave(data={}){
     lastOk: Date.now()
   }));
 }
+function licenseCachedData(){
+  try{ return JSON.parse(localStorage.getItem(LICENSE_CACHE_KEY)||"{}"); }catch(_){ return {}; }
+}
+async function erpLogUsage(action, result, durationMs, extra={}){
+  try{
+    if(!licenseUnlocked) return;
+    const db = licenseInitFirebase();
+    const deviceId = licenseGetDeviceId();
+    const dkey = licenseKey(deviceId);
+    const cached = licenseCachedData();
+    const code = cached.code || "";
+    const codeKey = code ? licenseKey(code) : "";
+    const now = licenseNow();
+    const ms = Math.max(0, Math.round(durationMs || 0));
+    const inc = firebase.database.ServerValue.increment;
+    const base = { lastUse:now, lastAction:action, lastResult:result, lastDurationMs:ms, lastExtra:extra||{}, deviceInfo:licenseGetDeviceInfo() };
+    const usageUpdate = { count:inc(1), lastAt:now, lastResult:result, lastDurationMs:ms, totalDurationMs:inc(ms), successCount:result==="OK"?inc(1):inc(0), errorCount:result==="ERROR"?inc(1):inc(0), lastExtra:extra||{} };
+    await db.ref(`${LICENSE_ROOT}/dispositivos/${dkey}`).update(base);
+    await db.ref(`${LICENSE_ROOT}/dispositivos/${dkey}/usage/${action}`).update(usageUpdate);
+    if(codeKey){
+      await db.ref(`${LICENSE_ROOT}/codigos/${codeKey}`).update(base);
+      await db.ref(`${LICENSE_ROOT}/codigos/${codeKey}/usage/${action}`).update(usageUpdate);
+    }
+  }catch(e){ console.warn("No se pudo registrar uso", e); }
+}
 function licenseUnlock(){
   licenseUnlocked = true;
   document.body.classList.remove("license-locked");
@@ -1339,8 +1370,11 @@ window.addEventListener("DOMContentLoaded", ()=>{
 });
 
 const A3_KEYS = ["PRENSA 7-4","PRENSA 7-5","PRENSA 7-9","PRENSA 7-10"];
+const A1_ADV_KEYS = ["PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 5","PRENSA 4","PRENSA 9"];
+const A3_ADV_KEYS = ["PRENSA 7-4","PRENSA 7-5","PRENSA 9-2","PRENSA 10"];
 const A3_SET = new Set(A3_KEYS);
-const A3_ADV_SET = new Set(A3_KEYS);
+const A1_ADV_SET = new Set(A1_ADV_KEYS);
+const A3_ADV_SET = new Set(A3_ADV_KEYS);
 
 const $ = (id)=>document.getElementById(id);
 const pad2 = n => String(n).padStart(2,"0");
@@ -1423,7 +1457,7 @@ function bucketDias(d){
 
 function orderPressKey(orden, prensa){ return `${String(orden||"").trim()}||${normalizePressKey(prensa)}`; }
 function obsNorm(v){ const t=String(v ?? "").trim(); return t ? t : "(EN BLANCO)"; }
-function showLoading(title="Cargando…", sub="Espera un momento…"){ const box=$("loading"); if(!box) return; $("loadingTitle").textContent=title; $("loadingSub").textContent=sub; box.style.display="block"; }
+function showLoading(title="Cargando…", sub=""){ const box=$("loading"); if(!box) return; $("loadingTitle").textContent=title; const subEl=$("loadingSub"); if(subEl) subEl.textContent=""; box.style.display="block"; }
 function hideLoading(){ const box=$("loading"); if(box) box.style.display="none"; }
 
 /* =============== Selector múltiple bonito =============== */
@@ -1576,7 +1610,11 @@ let fechaSel=localYMD(new Date()), filtroProd="ALL", rawRows=[], pivot=[];
 const elFecha=$("fecha"), sub=$("sub"), badgeDate=$("badgeDate"), msg=$("msg"), tbody=$("tbody");
 function showMsg(t){ msg.style.display="block"; msg.textContent="⚠️ "+t; }
 function hideMsg(){ msg.style.display="none"; msg.textContent=""; }
-function currentRowsProd(){ return filtroProd==="A3" ? rawRows.filter(r=>A3_SET.has(normalizePressKey(r.MachineName))) : rawRows; }
+function currentRowsProd(){
+  if(filtroProd==="A3") return rawRows.filter(r=>A3_SET.has(normalizePressKey(r.MachineName)));
+  if(filtroProd==="A1") return rawRows.filter(r=>!A3_SET.has(normalizePressKey(r.MachineName)));
+  return rawRows;
+}
 async function fetchSierra(fechaISO){
   const resp=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({Fecha_inicial:fechaISO,Fecha_final:fechaISO,Departamento:null})});
   if(!resp.ok){ const tx=await resp.text().catch(()=>""); throw new Error(`Optima HTTP ${resp.status}: ${tx.slice(0,160)}`); }
@@ -1593,12 +1631,21 @@ function buildPivot(){
   }
   pivot=Array.from(map.values()).sort((a,b)=>a.press.localeCompare(b.press,"es",{numeric:true}));
 }
-function updateMeta(){ sub.textContent=`Fecha: ${fechaSel} | Bloque: Sierra | Filtro: ${filtroProd==="A3"?"A3 (7-4, 7-5, 7-9, 7-10)":"Todas"}`; badgeDate.textContent=prettyDate(fechaSel); }
-function setFiltroProd(f){ filtroProd=f; $("btnA3Prod").classList.toggle("active",f==="A3"); $("btnAllProd").classList.toggle("active",f==="ALL"); renderProd(); }
-$("btnA3Prod").onclick=()=>setFiltroProd("A3"); $("btnAllProd").onclick=()=>setFiltroProd("ALL");
-$("btnHoy").onclick=()=>{fechaSel=localYMD(new Date());elFecha.value=fechaSel;cargarProd();};
-$("btnAyer").onclick=()=>{const d=new Date();d.setDate(d.getDate()-1);fechaSel=localYMD(d);elFecha.value=fechaSel;cargarProd();};
-$("btnCargar").onclick=()=>{fechaSel=elFecha.value||fechaSel;cargarProd();};
+function updateMeta(){
+  const label = filtroProd==="A3" ? "A3 (7-4, 7-5, 7-9, 7-10)" : (filtroProd==="A1" ? "A1 (no A3)" : "Todas");
+  sub.textContent=`Fecha: ${fechaSel} | Bloque: Sierra | Filtro: ${label}`; badgeDate.textContent=prettyDate(fechaSel);
+}
+function setFiltroProd(f){
+  filtroProd=f;
+  $("btnA1Prod").classList.toggle("active",f==="A1");
+  $("btnA3Prod").classList.toggle("active",f==="A3");
+  renderProd();
+}
+$("btnA1Prod").onclick=()=>setFiltroProd(filtroProd==="A1"?"ALL":"A1");
+$("btnA3Prod").onclick=()=>setFiltroProd(filtroProd==="A3"?"ALL":"A3");
+$("btnHoy").onclick=()=>{fechaSel=localYMD(new Date());elFecha.value=fechaSel;cargarProd("btnHoy");};
+$("btnAyer").onclick=()=>{const d=new Date();d.setDate(d.getDate()-1);fechaSel=localYMD(d);elFecha.value=fechaSel;cargarProd("btnAyer");};
+$("btnCargar").onclick=()=>{fechaSel=elFecha.value||fechaSel;cargarProd("btnCargar");};
 function applyAutoFitProd(){ const box=document.querySelector("#viewProd .pivot"), th=document.querySelector("#viewProd thead"); if(!box||!th) return; let h=Math.floor((box.clientHeight-th.offsetHeight-10)/(pivot.length+1)); h=Math.max(30,Math.min(74,h)); document.documentElement.style.setProperty("--rowH",h+"px"); }
 function renderProd(){
   updateMeta(); buildPivot(); tbody.innerHTML="";
@@ -1625,7 +1672,22 @@ if(tbody){
   });
 }
 
-async function cargarProd(){ showLoading("Cargando producción","Consultando bloque Sierra para la fecha seleccionada…"); showMsg("Cargando Sierra…"); try{ const rows=await fetchSierra(fechaSel); rawRows=(rows||[]).map(r=>({...r,MachineName:(r.MachineName??r.machineName??r.machine??"").toString(),shift:(r.shift??r.Shift??r.turno??"").toString().trim()})); hideMsg(); renderProd(); }catch(e){ console.error(e); showMsg("Error cargando Sierra: "+(e?.message||e)); } finally{ hideLoading(); } }
+async function cargarProd(source="auto"){
+  const t0 = performance.now(); let result="OK", errMsg="";
+  showLoading("Cargando producción");
+  try{
+    const rows=await fetchSierra(fechaSel);
+    rawRows=(rows||[]).map(r=>({...r,MachineName:(r.MachineName??r.machineName??r.machine??"").toString(),shift:(r.shift??r.Shift??r.turno??"").toString().trim()}));
+    hideMsg(); renderProd();
+  }catch(e){ result="ERROR"; errMsg=e?.message||String(e); console.error(e); showMsg("Error cargando Sierra: "+errMsg); }
+  finally{
+    hideLoading();
+    if(source!=="auto"){
+      const rows=currentRowsProd();
+      erpLogUsage("cargar_produccion", result, performance.now()-t0, {fuente:source, fecha:fechaSel, filtro:filtroProd, registros:rows.length, kg:rows.reduce((s,r)=>s+getKg(r),0), error:errMsg});
+    }
+  }
+}
 
 /* =========================================================
    MODAL Y EXPORTACIÓN PNG
@@ -1710,7 +1772,7 @@ function openOrdenDetalleCampoValor(opts){
 window.openProdDetalle=function(pressKey,scope){
   let rows=currentRowsProd(); if(pressKey!=="_ALL_") rows=rows.filter(r=>normalizePressKey(r.MachineName)===pressKey); if(scope==="1") rows=rows.filter(r=>String(r.shift).trim()==="1"); if(scope==="2") rows=rows.filter(r=>String(r.shift).trim()==="2");
   modalStack=[]; modalState=null; btnBack.disabled=true;
-  const who=pressKey==="_ALL_"?(filtroProd==="A3"?"A3":"TODAS"):pressKey, titleScope=scope==="DIA"?"DÍA (T1+T2)":(scope==="1"?"TURNO 1":"TURNO 2"), totKg=rows.reduce((s,r)=>s+getKg(r),0), dies=new Set(rows.map(r=>matrixKey(normalizePressKey(r.MachineName),r.dienum||r.DIENUM)).filter(Boolean)).size;
+  const who=pressKey==="_ALL_"?(filtroProd==="A3"?"A3":(filtroProd==="A1"?"A1":"TODAS")):pressKey, titleScope=scope==="DIA"?"DÍA (T1+T2)":(scope==="1"?"TURNO 1":"TURNO 2"), totKg=rows.reduce((s,r)=>s+getKg(r),0), dies=new Set(rows.map(r=>matrixKey(normalizePressKey(r.MachineName),r.dienum||r.DIENUM)).filter(Boolean)).size;
   function renderClientes(){
     modalTitle.textContent=`Clientes — ${who}`; modalMeta.textContent=`Fecha: ${prettyDate(fechaSel)} | ${titleScope} | Matrices por prensa: ${fmt0(dies)} | Total: ${fmt0(totKg)} Kg`; modalHint.textContent="Toca un cliente para ver prioridades.";
     const groups=groupBy(rows,r=>r.cliente,null).map(g=>({Cliente:g.key,Matrices:g.dies.size,Regs:g.regs,Kg:fmt0(g.kg),_rows:g.rows}));
@@ -1770,7 +1832,7 @@ window.openProdDetalle=function(pressKey,scope){
 const tabProd=$("tabProd"), tabAdv=$("tabAdv"), viewProd=$("viewProd"), viewAdv=$("viewAdv"), controlsProd=$("controlsProd");
 let advFechaSel=localYMD(new Date()); $("fechaAdv").value=advFechaSel;
 let programasRaw=[], prodRows2d=[], advRowsOrden=[], advByMatrix=[], advByPressPend=[], advByPressComp=[], advOverOrders=[], advNoProgOrders=[], advNoProgDetails=[], advWrongPressOrders=[];
-let viewMode=localStorage.getItem("avance_view")||"DASH", advA3Only=localStorage.getItem("avance_a3")==="1";
+let viewMode=localStorage.getItem("avance_view")||"DASH", advZona=localStorage.getItem("avance_zona") || (localStorage.getItem("avance_a3")==="1" ? "A3" : "ALL");
 const savedFilterHidden = localStorage.getItem("avance_fhide");
 let filtersHidden = savedFilterHidden === null ? true : savedFilterHidden === "1";
 const selCliente=$("selCliente"), selPrioridad=$("selPrioridad"), selObs=$("selObs"), selPrensaAdv=$("selPrensaAdv"), selMaquina=$("selMaquina"), txtBuscarAdv=$("txtBuscarAdv");
@@ -1784,8 +1846,8 @@ function setTab(which){
   viewProd.style.display = isProd ? "" : "none";
   controlsProd.style.display = isProd ? "" : "none";
   viewAdv.style.display = isProd ? "none" : "block";
+  $("btnA1Prod").style.display = isProd ? "" : "none";
   $("btnA3Prod").style.display = isProd ? "" : "none";
-  $("btnAllProd").style.display = isProd ? "" : "none";
 
   if(!isProd){
     badgeDate.textContent = prettyDate(advFechaSel);
@@ -1807,15 +1869,25 @@ window.erpHandleAndroidBack = function(){
 function showAdvMsg(t){ $("advMsg").style.display="block"; $("advMsg").textContent="⚠️ "+t; }
 function hideAdvMsg(){ $("advMsg").style.display="none"; $("advMsg").textContent=""; }
 function ymdMinus1(ymd){ const [y,m,d]=ymd.split("-").map(Number); const dt=new Date(y,m-1,d); dt.setDate(dt.getDate()-1); return localYMD(dt); }
-$("btnAdvHoy").onclick=()=>{advFechaSel=localYMD(new Date());$("fechaAdv").value=advFechaSel;badgeDate.textContent=prettyDate(advFechaSel);cargarAvance();};
-$("btnAdvAyer").onclick=()=>{const d=new Date();d.setDate(d.getDate()-1);advFechaSel=localYMD(d);$("fechaAdv").value=advFechaSel;badgeDate.textContent=prettyDate(advFechaSel);cargarAvance();};
-$("btnAdvCargar").onclick=()=>{advFechaSel=$("fechaAdv").value||advFechaSel;badgeDate.textContent=prettyDate(advFechaSel);cargarAvance();};
+$("btnAdvHoy").onclick=()=>{advFechaSel=localYMD(new Date());$("fechaAdv").value=advFechaSel;badgeDate.textContent=prettyDate(advFechaSel);cargarAvance("btnAdvHoy");};
+$("btnAdvAyer").onclick=()=>{const d=new Date();d.setDate(d.getDate()-1);advFechaSel=localYMD(d);$("fechaAdv").value=advFechaSel;badgeDate.textContent=prettyDate(advFechaSel);cargarAvance("btnAdvAyer");};
+$("btnAdvCargar").onclick=()=>{advFechaSel=$("fechaAdv").value||advFechaSel;badgeDate.textContent=prettyDate(advFechaSel);cargarAvance("btnAdvCargar");};
 function setFiltersHidden(h){ filtersHidden=!!h; localStorage.setItem("avance_fhide",filtersHidden?"1":"0"); $("filtersGrid").style.display=filtersHidden?"none":""; $("btnToggleFilters").textContent=filtersHidden?"MOSTRAR FILTROS":"OCULTAR FILTROS"; }
 $("btnToggleFilters").onclick=()=>setFiltersHidden(!filtersHidden); setFiltersHidden(filtersHidden);
 function setViewMode(m){ viewMode=m; localStorage.setItem("avance_view",m); $("vDash").style.display=m==="DASH"?"":"none"; $("vCards").style.display=m==="CARDS"?"":"none"; $("btnVistaDash").classList.toggle("active",m==="DASH"); $("btnVistaCards").classList.toggle("active",m==="CARDS"); renderAvance(); }
 $("btnVistaDash").onclick=()=>setViewMode("DASH"); $("btnVistaCards").onclick=()=>setViewMode("CARDS");
-function setAdvA3(on){ advA3Only=!!on; localStorage.setItem("avance_a3",advA3Only?"1":"0"); $("btnAdvA3").classList.toggle("active",advA3Only); recalcAndRender(); }
-$("btnAdvA3").onclick=()=>setAdvA3(!advA3Only); $("btnAdvA3").classList.toggle("active",advA3Only);
+function setAdvZona(z){
+  advZona = z || "ALL";
+  localStorage.setItem("avance_zona", advZona);
+  localStorage.setItem("avance_a3", advZona==="A3"?"1":"0");
+  $("btnAdvA1").classList.toggle("active",advZona==="A1");
+  $("btnAdvA3").classList.toggle("active",advZona==="A3");
+  recalcAndRender();
+}
+$("btnAdvA1").onclick=()=>setAdvZona(advZona==="A1"?"ALL":"A1");
+$("btnAdvA3").onclick=()=>setAdvZona(advZona==="A3"?"ALL":"A3");
+$("btnAdvA1").classList.toggle("active",advZona==="A1");
+$("btnAdvA3").classList.toggle("active",advZona==="A3");
 [selCliente,selPrioridad,selObs,selPrensaAdv,selMaquina].forEach(enhanceMultiSelect);
 [selCliente,selPrioridad,selObs,selPrensaAdv,selMaquina].forEach(s=>s.onchange=()=>recalcAndRender()); txtBuscarAdv.oninput=()=>recalcAndRender();
 $("btnClearFilters").onclick=()=>{ [selCliente,selPrioridad,selObs,selPrensaAdv,selMaquina].forEach(clearMulti); txtBuscarAdv.value=""; refreshAllMulti(); recalcAndRender(); };
@@ -1856,7 +1928,7 @@ function calcOrdenStatus(prog,prod){
 }
 function applyFilters(rows){
   const cVals=getMultiValues(selCliente), pVals=getMultiValues(selPrioridad), oVals=getMultiValues(selObs), prVals=getMultiValues(selPrensaAdv), mqVals=getMultiValues(selMaquina), q=norm(txtBuscarAdv.value);
-  return rows.filter(r=>{ const CLIENTE=String(r.CLIENTE||"").trim(), PRIORIDAD=String(r.PRIORIDAD||"").trim(), OBS=obsNorm(r.OBSERVACION||r.OBSERVACION_2), PRENSA=normalizePressKey(r.PRENSA||""), MAQ=String(r.LINEA||r.MAQUINA||"").trim()||"-"; if(advA3Only&&!A3_ADV_SET.has(PRENSA)) return false; if(!multiMatch(cVals,CLIENTE)) return false; if(!multiMatch(pVals,PRIORIDAD)) return false; if(!multiMatch(oVals,OBS)) return false; if(!multiMatch(prVals,PRENSA)) return false; if(!multiMatch(mqVals,MAQ)) return false; if(q){ const blob=norm(`${r.ORDEN} ${r.DIENUM} ${r.RUTA} ${r.CLIENTE}`); if(!blob.includes(q)) return false; } return true; });
+  return rows.filter(r=>{ const CLIENTE=String(r.CLIENTE||"").trim(), PRIORIDAD=String(r.PRIORIDAD||"").trim(), OBS=obsNorm(r.OBSERVACION||r.OBSERVACION_2), PRENSA=normalizePressKey(r.PRENSA||""), MAQ=String(r.LINEA||r.MAQUINA||"").trim()||"-"; if(advZona==="A3"&&!A3_ADV_SET.has(PRENSA)) return false; if(advZona==="A1"&&!A1_ADV_SET.has(PRENSA)) return false; if(!multiMatch(cVals,CLIENTE)) return false; if(!multiMatch(pVals,PRIORIDAD)) return false; if(!multiMatch(oVals,OBS)) return false; if(!multiMatch(prVals,PRENSA)) return false; if(!multiMatch(mqVals,MAQ)) return false; if(q){ const blob=norm(`${r.ORDEN} ${r.DIENUM} ${r.RUTA} ${r.CLIENTE}`); if(!blob.includes(q)) return false; } return true; });
 }
 function recompute(){
   if(!programasRaw.length){ advRowsOrden=[]; advByMatrix=[]; advByPressPend=[]; advByPressComp=[]; advOverOrders=[]; advNoProgOrders=[]; advNoProgDetails=[]; advWrongPressOrders=[]; updateKpis(); return; }
@@ -1905,7 +1977,7 @@ function updateKpis(){
 }
 function recalcAndRender(){ recompute(); renderAvance(); }
 function renderAvance(){
-  $("advMeta").textContent=`Fecha base: ${prettyDate(advFechaSel)} | Producción: ${prettyDate(ymdMinus1(advFechaSel))} + ${prettyDate(advFechaSel)} | ${[selLabel(selCliente,"Cliente"),selLabel(selPrioridad,"Prioridad"),selLabel(selObs,"Obs"),selLabel(selPrensaAdv,"Prensa"),selLabel(selMaquina,"Maq")].join(" | ")} | ${advA3Only?"A3=ON":"A3=OFF"}`;
+  $("advMeta").textContent=`Fecha base: ${prettyDate(advFechaSel)} | Producción: ${prettyDate(ymdMinus1(advFechaSel))} + ${prettyDate(advFechaSel)} | ${[selLabel(selCliente,"Cliente"),selLabel(selPrioridad,"Prioridad"),selLabel(selObs,"Obs"),selLabel(selPrensaAdv,"Prensa"),selLabel(selMaquina,"Maq")].join(" | ")} | ${advZona==="A3"?"Zona=A3":(advZona==="A1"?"Zona=A1":"Zona=Todas")}`;
   if(viewMode==="DASH"){
     const totalPendKg=advByPressPend.reduce((s,x)=>s+x.Kg,0), totalPendMat=advByPressPend.reduce((s,x)=>s+x.Matrices,0), totalCompKg=advByPressComp.reduce((s,x)=>s+x.Kg,0), totalCompMat=advByPressComp.reduce((s,x)=>s+x.Matrices,0), totalOverKg=advOverOrders.reduce((s,x)=>s+(x.overKg||0),0), totalOverPzs=advOverOrders.reduce((s,x)=>s+(x.overPzs||0),0);
     const atrasadas=advRowsOrden.filter(x=>!x.cerrada && safeNum(x.DIAS_ATRASO)>0), atrasoKg=atrasadas.reduce((s,x)=>s+(x.kgResumenPend||0),0);
@@ -2078,7 +2150,21 @@ function exportAvanceXLSX(){
   const b64=XLSX.write(wb,{bookType:"xlsx",type:"base64"});
   saveBase64File(filename,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",b64);
 }
-async function cargarAvance(){ hideAdvMsg(); showLoading("Cargando avance y pendiente","Consultando PROGRAMAS y producción de los últimos 2 días…"); $("advMeta").textContent="Cargando PROGRAMAS + Producido (Optima)…"; try{ const meta=await fetchMeta().catch(()=>({})); programasRaw=await fetchProgramasLatest(); const f0=ymdMinus1(advFechaSel), f1=advFechaSel; const rows=await fetchSierraRango(f0,f1); prodRows2d=(rows||[]).map(r=>({...r,MachineName:(r.MachineName??r.machineName??r.machine??"").toString(),shift:(r.shift??r.Shift??r.turno??"").toString().trim(),pc:(r.pc??r.Pc??r.PC??0),peso:(r.peso??r.Peso??r.PESO??r.kg??r.Kg??r.KG??0),sonum:r.sonum,soitemnum:r.soitemnum})); recalcAndRender(); $("advMeta").textContent=`✅ Programas: ${fmt0(programasRaw.length)} | Producción regs (2 días): ${fmt0(prodRows2d.length)} | Última carga programas: ${meta?.updatedAt||"-"}`; if(!programasRaw.length) showAdvMsg("PROGRAMAS llegó vacío. Revisa el Apps Script."); if(!prodRows2d.length) showAdvMsg("Optima Sierra devolvió 0 registros para 2 días."); }catch(e){ console.error(e); showAdvMsg(e?.message||String(e)); $("advMeta").textContent="❌ Error cargando Avance."; } finally{ hideLoading(); } }
+async function cargarAvance(source="auto"){
+  const t0 = performance.now(); let result="OK", errMsg="";
+  hideAdvMsg(); showLoading("Cargando avance y pendiente"); $("advMeta").textContent="Cargando PROGRAMAS + Producido (Optima)…";
+  try{
+    const meta=await fetchMeta().catch(()=>({})); programasRaw=await fetchProgramasLatest();
+    const f0=ymdMinus1(advFechaSel), f1=advFechaSel; const rows=await fetchSierraRango(f0,f1);
+    prodRows2d=(rows||[]).map(r=>({...r,MachineName:(r.MachineName??r.machineName??r.machine??"").toString(),shift:(r.shift??r.Shift??r.turno??"").toString().trim(),pc:(r.pc??r.Pc??r.PC??0),peso:(r.peso??r.Peso??r.PESO??r.kg??r.Kg??r.KG??0),sonum:r.sonum,soitemnum:r.soitemnum}));
+    recalcAndRender(); $("advMeta").textContent=`✅ Programas: ${fmt0(programasRaw.length)} | Producción regs (2 días): ${fmt0(prodRows2d.length)} | Última carga programas: ${meta?.updatedAt||"-"}`;
+    if(!programasRaw.length) showAdvMsg("PROGRAMAS llegó vacío. Revisa el Apps Script."); if(!prodRows2d.length) showAdvMsg("Optima Sierra devolvió 0 registros para 2 días.");
+  }catch(e){ result="ERROR"; errMsg=e?.message||String(e); console.error(e); showAdvMsg(errMsg); $("advMeta").textContent="❌ Error cargando Avance."; }
+  finally{
+    hideLoading();
+    if(source!=="auto") erpLogUsage("cargar_avance_pendiente", result, performance.now()-t0, {fuente:source, fecha:advFechaSel, zona:advZona, programas:programasRaw.length, produccionRegs:prodRows2d.length, matrices:advByMatrix.length, error:errMsg});
+  }
+}
 
 window.addEventListener("resize",()=>requestAnimationFrame(()=>{applyAutoFitProd();requestAnimationFrame(applyAutoFitProd);}));
 elFecha.value=fechaSel; setViewMode(viewMode); refreshAllMulti(); /* cargarProd() se ejecuta después de validar licencia */
@@ -2100,18 +2186,6 @@ elFecha.value=fechaSel; setViewMode(viewMode); refreshAllMulti(); /* cargarProd(
   window.addEventListener('load', forceAndroidScroll);
   setTimeout(forceAndroidScroll, 300);
   setTimeout(forceAndroidScroll, 1200);
-})();
-</script>
-
-<script>
-(function(){
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(function(err){
-        console.warn('Service Worker no registrado:', err);
-      });
-    });
-  }
 })();
 </script>
 </body>
