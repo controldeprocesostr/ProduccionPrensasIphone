@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>ERP Prensas — Producción + Avance + Rechazos V6.6.3 FIX12</title>
+<title>ERP Prensas — Producción + Avance + Rechazos V6.6.3 FIX13</title>
 <meta name="theme-color" content="#07111f">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -1427,6 +1427,279 @@ body.adv-screen #btnA4Prod{display:none!important;}
 #viewRej .rejCorrosionChip em{font-size:8px!important;}
 
 </style>
+
+<script>
+/* =========================================================
+   FIX13 — Compartir rechazos por planta/prensa, periodo y detalle
+   ========================================================= */
+document.addEventListener("DOMContentLoaded",function(){
+  const byId=(id)=>document.getElementById(id);
+  const overlay=byId("rejShareConfig");
+  const openBtn=byId("btnShareRejConfig");
+  if(!overlay || !openBtn) return;
+
+  const closeBtn=byId("rejShareClose");
+  const cancelBtn=byId("rejShareCancel");
+  const prepareBtn=byId("rejSharePrepare");
+  const typeSel=byId("rejShareTipo");
+  const scopeSel=byId("rejShareScope");
+  const periodSel=byId("rejSharePeriodo");
+  const dateBox=byId("rejShareFechaSimple");
+  const dateInput=byId("rejShareFecha");
+  const rangeBox=byId("rejShareRango");
+  const fromInput=byId("rejShareDesde");
+  const toInput=byId("rejShareHasta");
+  const monthInfo=byId("rejShareMonthInfo");
+  const msg=byId("rejShareMsg");
+
+  const OFFICIAL_PRESSES=[
+    "PRENSA 7-1","PRENSA 7-2","PRENSA 7-3","PRENSA 7-6","PRENSA 7-7","PRENSA 7-8",
+    "PRENSA 7-4","PRENSA 7-5","PRENSA 7-9","PRENSA 7-10","PRENSA 7-11S"
+  ];
+
+  function safeToday(){
+    try{ return localYMD(new Date()); }
+    catch(_){ return new Date().toISOString().slice(0,10); }
+  }
+  function safeDateLabel(ymd){
+    try{ return prettyDate(ymd); }
+    catch(_){ return String(ymd||"-"); }
+  }
+  function setShareMsg(text="",bad=false){
+    if(!msg) return;
+    msg.textContent=text;
+    msg.classList.toggle("bad",!!bad);
+  }
+  function plantForPress(press){
+    try{ return window.erpPlantOfPress?.(press)||""; }
+    catch(_){ return ""; }
+  }
+  function normalizeSharePress(press){
+    try{ return normalizePressKey(press); }
+    catch(_){ return String(press||"").trim().toUpperCase(); }
+  }
+  function shortSharePress(press){
+    const p=normalizeSharePress(press);
+    return p ? p.replace(/^PRENSA\s+/i,"P ") : "-";
+  }
+  function isUsableSharePress(press){
+    try{ return validRejectPress(normalizeSharePress(press)); }
+    catch(_){ return !!press && !String(press).toUpperCase().includes("SIN PRENSA"); }
+  }
+  function addOption(parent,value,label){
+    const opt=document.createElement("option");
+    opt.value=value; opt.textContent=label; parent.appendChild(opt);
+  }
+  function fillScopeOptions(){
+    const previous=scopeSel.value;
+    scopeSel.innerHTML="";
+    addOption(scopeSel,"ALL","Todas las prensas");
+    const plants=document.createElement("optgroup"); plants.label="Plantas";
+    addOption(plants,"PLANT:A1","Planta A1");
+    addOption(plants,"PLANT:A3","Planta A3");
+    addOption(plants,"PLANT:A4","Planta A4");
+    scopeSel.appendChild(plants);
+
+    const presses=new Set(OFFICIAL_PRESSES);
+    try{
+      [...(rejRawDay||[]),...(rejRawMonth||[])].forEach(r=>{
+        const p=getRejectPress(r);
+        if(isUsableSharePress(p)) presses.add(normalizeSharePress(p));
+      });
+    }catch(_){ }
+    const plantOrder={A1:1,A3:2,A4:3};
+    const sorted=[...presses].filter(isUsableSharePress).sort((a,b)=>{
+      const pa=plantForPress(a),pb=plantForPress(b);
+      return (plantOrder[pa]||9)-(plantOrder[pb]||9) || a.localeCompare(b,"es",{numeric:true,sensitivity:"base"});
+    });
+    const group=document.createElement("optgroup"); group.label="Prensas";
+    sorted.forEach(p=>addOption(group,`PRESS:${p}`,`${shortSharePress(p)} · ${plantForPress(p)||"sin planta"}`));
+    scopeSel.appendChild(group);
+
+    const wanted=(previous && [...scopeSel.options].some(o=>o.value===previous)) ? previous :
+      ((typeof filtroProd!=="undefined" && ["A1","A3","A4"].includes(filtroProd)) ? `PLANT:${filtroProd}` : "ALL");
+    scopeSel.value=wanted;
+  }
+  function syncPeriodFields(){
+    const mode=periodSel.value;
+    dateBox.hidden=mode!=="DATE";
+    rangeBox.hidden=mode!=="RANGE";
+    monthInfo.hidden=mode!=="MONTH";
+    if(mode==="MONTH"){
+      const today=safeToday();
+      const start=monthStartYMD(today);
+      monthInfo.textContent=`Mes en curso: ${safeDateLabel(start)} al ${safeDateLabel(today)}`;
+    }
+    setShareMsg("");
+  }
+  function openConfig(){
+    fillScopeOptions();
+    const selected=(typeof fechaSel!=="undefined" && fechaSel) ? fechaSel : safeToday();
+    typeSel.value="SUMMARY";
+    periodSel.value="DATE";
+    dateInput.value=selected;
+    fromInput.value=monthStartYMD(selected);
+    toInput.value=selected;
+    syncPeriodFields();
+    setShareMsg("");
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden","false");
+    setTimeout(()=>typeSel.focus(),40);
+  }
+  function closeConfig(){
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden","true");
+    setShareMsg("");
+  }
+  function selectedDates(){
+    const mode=periodSel.value;
+    if(mode==="MONTH"){
+      const ff=safeToday();
+      return {fi:monthStartYMD(ff),ff,label:`Mes en curso · ${safeDateLabel(monthStartYMD(ff))} al ${safeDateLabel(ff)}`};
+    }
+    if(mode==="RANGE"){
+      const fi=fromInput.value,ff=toInput.value;
+      if(!fi || !ff) throw new Error("Selecciona las dos fechas del rango.");
+      if(fi>ff) throw new Error("La fecha Desde no puede ser posterior a la fecha Hasta.");
+      return {fi,ff,label:`${safeDateLabel(fi)} al ${safeDateLabel(ff)}`};
+    }
+    const d=dateInput.value;
+    if(!d) throw new Error("Selecciona una fecha.");
+    return {fi:d,ff:d,label:safeDateLabel(d)};
+  }
+  function scopeLabel(){
+    return scopeSel.options[scopeSel.selectedIndex]?.textContent || "Todas las prensas";
+  }
+  function scopeAccepts(row){
+    const press=getRejectPress(row);
+    if(!isUsableSharePress(press)) return false;
+    const scope=scopeSel.value;
+    if(scope==="ALL") return true;
+    if(scope.startsWith("PLANT:")) return plantForPress(press)===scope.slice(6);
+    if(scope.startsWith("PRESS:")) return normalizeSharePress(press)===normalizeSharePress(scope.slice(6));
+    return true;
+  }
+  function rowsForShare(raw){
+    return (Array.isArray(raw)?raw:[]).filter(r=>{
+      const motivo=getMotivoRej(r);
+      return !isLabMotivo(motivo) && isPressMotivoAsignado(motivo) && scopeAccepts(r);
+    });
+  }
+  function rejectedBy(row){
+    const value=rejFirstVal(row,[
+      "RejectedBy","rejectedBy","Rejected_By","REJECTED_BY","RejectBy","rejectBy",
+      "RechazadoPor","rechazadoPor","RECHAZADO_POR","QuienRechazo","quienRechazo","QuiénRechazó",
+      "ResponsableRechazo","responsableRechazo","UsuarioRechazo","usuarioRechazo",
+      "EmployeeName","employeeName","EmpName","empName","WorkerName","workerName",
+      "Operario","operario","Inspector","inspector","UserName","username","Usuario","usuario",
+      "CreatedBy","createdBy","ReportadoPor","reportadoPor","EmpNum","empnum","EmployeeId","employeeId"
+    ]);
+    return String(value||"").trim() || "NO INFORMADO";
+  }
+  function rawDateLabel(row){
+    const raw=String(getDateAny(row)||"-").trim();
+    const iso=raw.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+    return iso ? safeDateLabel(iso) : raw.slice(0,10);
+  }
+  function buildSummaryRows(rows){
+    const map=new Map(),allMatrices=new Set();
+    rows.forEach(r=>{
+      const press=getRejectPress(r);
+      if(!map.has(press)) map.set(press,{PRENSA:shortSharePress(press),KG:0,PZS:0,_mats:new Set()});
+      const item=map.get(press),die=getDieAny(r);
+      item.KG+=getRejKg(r); item.PZS+=getRejPzs(r);
+      if(die && die!=="-" && !String(die).startsWith("SIN ")){ item._mats.add(die); allMatrices.add(die); }
+    });
+    const list=[...map.values()].map(x=>({...x,MATRICES:x._mats.size})).sort((a,b)=>b.KG-a.KG||b.PZS-a.PZS||a.PRENSA.localeCompare(b.PRENSA,"es",{numeric:true}));
+    const totalKg=list.reduce((s,x)=>s+x.KG,0),totalPzs=list.reduce((s,x)=>s+x.PZS,0);
+    list.push({PRENSA:"TOTAL",KG:totalKg,PZS:totalPzs,MATRICES:allMatrices.size,_total:true});
+    return {list,totalKg,totalPzs,totalMatrices:allMatrices.size};
+  }
+  function buildDetailRows(rows){
+    const map=new Map();
+    rows.forEach(r=>{
+      const press=getRejectPress(r),die=getDieAny(r),order=getRejectOrder(r),motive=getMotivoRej(r),who=rejectedBy(r),date=rawDateLabel(r);
+      const key=[date,press,die,order,motive,who].join("\u241f");
+      if(!map.has(key)) map.set(key,{date,press,die,order,motive,who,PZS:0,KG:0});
+      const item=map.get(key); item.PZS+=getRejPzs(r); item.KG+=getRejKg(r);
+    });
+    const list=[...map.values()].sort((a,b)=>
+      a.press.localeCompare(b.press,"es",{numeric:true}) || a.die.localeCompare(b.die,"es",{numeric:true}) ||
+      a.order.localeCompare(b.order,"es",{numeric:true}) || a.date.localeCompare(b.date,"es",{numeric:true})
+    ).map(x=>({
+      IDENTIFICACION:`${shortSharePress(x.press)}\n${x.date}`,
+      TRABAJO:`Matriz: ${x.die}\nOrden: ${x.order}`,
+      REVISION:`${x.motive}\nRechazó: ${x.who}`,
+      CANTIDAD:`${fmt0(x.PZS)} pzs\n${fmt0(x.KG)} kg`,
+      KG:x.KG,PZS:x.PZS
+    }));
+    return {list,totalKg:list.reduce((s,x)=>s+x.KG,0),totalPzs:list.reduce((s,x)=>s+x.PZS,0)};
+  }
+  function resetReportModal(){
+    try{ modalStack=[]; modalState=null; btnBack.disabled=true; listWrap.scrollTop=0; }
+    catch(_){ }
+  }
+  function showSummary(rows,period){
+    const report=buildSummaryRows(rows);
+    openModalTable(
+      `Resumen de rechazos — ${scopeLabel()}`,
+      `${period.label} · ${fmt0(report.totalKg)} kg · ${fmt0(report.totalPzs)} pzs · ${fmt0(report.totalMatrices)} matrices`,
+      "Resumen por prensa. Usa Compartir para enviarlo.",
+      [
+        {k:"PRENSA",label:"Prensa",align:"left",w:"34%"},
+        {k:r=>fmt0(r.KG),label:"Kg",align:"right",w:"24%"},
+        {k:r=>fmt0(r.PZS),label:"Pzs",align:"right",w:"20%"},
+        {k:r=>fmt0(r.MATRICES),label:"Matrices",align:"right",w:"22%"}
+      ],report.list,null
+    );
+    modal.classList.add("rejShareReport");
+    listWrap.classList.add("rejShareReportContent");
+  }
+  function showDetail(rows,period){
+    const report=buildDetailRows(rows);
+    if(report.list.length>180) throw new Error(`Hay ${fmt0(report.list.length)} detalles. Elige una prensa o un rango más corto para que el reporte sea legible, o comparte el resumen.`);
+    openModalTable(
+      `Rechazos para revisión — ${scopeLabel()}`,
+      `${period.label} · ${fmt0(report.list.length)} registros agrupados · ${fmt0(report.totalPzs)} pzs · ${fmt0(report.totalKg)} kg`,
+      "Incluye matriz, orden, motivo y responsable. Usa Compartir para enviarlo.",
+      [
+        {k:"IDENTIFICACION",label:"Prensa · Fecha",align:"left",w:"22%"},
+        {k:"TRABAJO",label:"Matriz · Orden",align:"left",w:"27%"},
+        {k:"REVISION",label:"Motivo · Rechazó",align:"left",w:"35%"},
+        {k:"CANTIDAD",label:"Pzs · Kg",align:"right",w:"16%"}
+      ],report.list,null
+    );
+    modal.classList.add("rejShareReport");
+    listWrap.classList.add("rejShareReportContent");
+  }
+  async function prepareShare(){
+    const original=prepareBtn.textContent;
+    try{
+      const period=selectedDates();
+      prepareBtn.disabled=true; prepareBtn.textContent="CONSULTANDO…";
+      setShareMsg("Consultando rechazos…");
+      const raw=await fetchRechazosRango(period.fi,period.ff);
+      const rows=rowsForShare(raw);
+      if(!rows.length) throw new Error("No hay rechazos de prensa para esa selección.");
+      resetReportModal();
+      if(typeSel.value==="DETAIL") showDetail(rows,period); else showSummary(rows,period);
+      closeConfig();
+    }catch(error){
+      setShareMsg(error?.message||String(error),true);
+    }finally{
+      prepareBtn.disabled=false; prepareBtn.textContent=original;
+    }
+  }
+
+  openBtn.addEventListener("click",openConfig);
+  closeBtn.addEventListener("click",closeConfig);
+  cancelBtn.addEventListener("click",closeConfig);
+  prepareBtn.addEventListener("click",prepareShare);
+  periodSel.addEventListener("change",syncPeriodFields);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) closeConfig(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape" && overlay.classList.contains("open")) closeConfig(); });
+});
+</script>
 </head>
 
 <body class="license-locked">
@@ -1521,11 +1794,11 @@ body.adv-screen #btnA4Prod{display:none!important;}
   <div id="viewRej" class="view tableWrap glass">
     <div class="sectionHdr">
       <div class="t">Rechazos</div>
+      <div class="rejHeaderActions">
+        <button id="btnRejMonth" class="btn rejModeBtn rejMonthBtn">VER MES</button>
+        <button id="btnShareRejConfig" class="rejShareMini" title="Preparar información para compartir" aria-label="Preparar información de rechazos para compartir">↗</button>
+      </div>
       <div class="s" id="rejMeta">Pendiente de cargar</div>
-    </div>
-
-    <div class="rejControlBar rejControlBarSlim rejMonthOnly">
-      <button id="btnRejMonth" class="btn rejModeBtn rejMonthBtn">VER MES</button>
     </div>
 
     <div class="rejAnalisis">
@@ -1606,6 +1879,54 @@ body.adv-screen #btnA4Prod{display:none!important;}
     <div class="glass contentCard">
       <div id="vDash" class="scrollArea"><div class="cards" id="advDash"></div></div>
       <div id="vCards" class="scrollArea" style="display:none"><div class="cards" id="advCards"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="rejShareConfig" class="rejShareOverlay" aria-hidden="true">
+  <div class="rejShareDialog glass" role="dialog" aria-modal="true" aria-labelledby="rejShareTitle">
+    <div class="rejShareDialogHead">
+      <div>
+        <div class="rejShareEyebrow">RECHAZOS</div>
+        <h2 id="rejShareTitle">Preparar para compartir</h2>
+      </div>
+      <button id="rejShareClose" class="rejShareClose" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <p class="rejShareIntro">Selecciona la información que necesita el personal de revisión.</p>
+    <div class="rejShareForm">
+      <label>
+        <span>Contenido</span>
+        <select id="rejShareTipo">
+          <option value="SUMMARY">Resumen de la tabla</option>
+          <option value="DETAIL">Detalle para revisión</option>
+        </select>
+      </label>
+      <label>
+        <span>Planta o prensa</span>
+        <select id="rejShareScope"></select>
+      </label>
+      <label>
+        <span>Periodo</span>
+        <select id="rejSharePeriodo">
+          <option value="DATE">Una fecha</option>
+          <option value="RANGE">Rango de fechas</option>
+          <option value="MONTH">Mes en curso</option>
+        </select>
+      </label>
+      <label id="rejShareFechaSimple">
+        <span>Fecha</span>
+        <input id="rejShareFecha" type="date">
+      </label>
+      <div id="rejShareRango" class="rejShareRange" hidden>
+        <label><span>Desde</span><input id="rejShareDesde" type="date"></label>
+        <label><span>Hasta</span><input id="rejShareHasta" type="date"></label>
+      </div>
+      <div id="rejShareMonthInfo" class="rejShareMonthInfo" hidden></div>
+    </div>
+    <div id="rejShareMsg" class="rejShareMsg" aria-live="polite"></div>
+    <div class="rejShareActions">
+      <button id="rejShareCancel" class="btn" type="button">CANCELAR</button>
+      <button id="rejSharePrepare" class="btn btnPrimary" type="button">VER Y COMPARTIR</button>
     </div>
   </div>
 </div>
@@ -2393,7 +2714,7 @@ async function cargarProd(source="auto"){
 const modal=$("modal"), modalTitle=$("modalTitle"), modalMeta=$("modalMeta"), modalHint=$("modalHint"), modalThead=$("modalThead"), modalBody=$("modalBody"), listWrap=$("listWrap"), btnBack=$("btnBack");
 let modalStack=[], modalState=null;
 function openModal(){ modal.style.display="block"; }
-function closeAnyModal(){ modal.style.display="none"; modal.classList.remove("modalCompact","modalMedium"); modalStack=[]; modalState=null; btnBack.disabled=true; modalBody.innerHTML=""; modalThead.innerHTML=""; modalTitle.textContent="Detalle"; modalMeta.textContent=""; modalHint.textContent=""; }
+function closeAnyModal(){ modal.style.display="none"; modal.classList.remove("modalCompact","modalMedium","rejShareReport"); listWrap?.classList.remove("rejShareReportContent"); modalStack=[]; modalState=null; btnBack.disabled=true; modalBody.innerHTML=""; modalThead.innerHTML=""; modalTitle.textContent="Detalle"; modalMeta.textContent=""; modalHint.textContent=""; }
 $("closeModal").onclick=closeAnyModal; $("btnClose2").onclick=closeAnyModal; modal.addEventListener("click",e=>{ if(e.target===modal) closeAnyModal(); }); $("btnTop").onclick=()=>{ listWrap.scrollTop=0; };
 function pushState(){ if(modalState) modalStack.push(modalState); btnBack.disabled=modalStack.length===0; }
 btnBack.onclick=()=>{ const prev=modalStack.pop(); btnBack.disabled=modalStack.length===0; if(prev){ modalState=prev; prev.render(); } };
@@ -2411,7 +2732,7 @@ function renderTable(columns, rows, onTap){
   modalBody.innerHTML="";
   for(const r of rows){ const tr=document.createElement("tr"); tr.className=onTap?"tapRow":""; tr.innerHTML=columns.map(c=>{ const v=typeof c.k==="function"?c.k(r):r[c.k]; return `<td class="${c.align||"left"}">${escHtml(v)}</td>`; }).join(""); if(onTap) tr.onclick=()=>onTap(r); modalBody.appendChild(tr); }
 }
-function openModalTable(title, meta, hint, columns, rows, onTapRow){ modalTitle.textContent=title; modalMeta.textContent=meta||""; modalHint.textContent=hint||""; renderTable(columns,rows,onTapRow); openModal(); }
+function openModalTable(title, meta, hint, columns, rows, onTapRow){ modal.classList.remove("rejShareReport"); listWrap?.classList.remove("rejShareReportContent"); modalTitle.textContent=title; modalMeta.textContent=meta||""; modalHint.textContent=hint||""; renderTable(columns,rows,onTapRow); openModal(); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function safeFileName(s){ return String(s||"captura").replace(/[\\/:*?"<>|]/g," ").replace(/\s+/g," ").trim().slice(0,100); }
 async function captureModalContentCanvas(){
@@ -2884,7 +3205,7 @@ function renderRechazos(){
       }).join("");
       const totalRow = `<tr class="totalRow"><td class="press">TOTAL</td><td class="num kg">${fmt0(sumKg)}</td><td class="num pzs">${fmt0(sumPzs)}</td><td class="num mats">${fmt0(matricesTotal)}</td></tr>`;
       cardsEl.style.setProperty('--rejRowsTotal', String(Math.max(1, activePivot.length+1)));
-      cardsEl.innerHTML = `<table class="rejDataTable rejSummaryTable"><thead><tr><th style="width:34%">Prensa</th><th style="width:24%;text-align:center">Kg</th><th style="width:20%;text-align:center">Pzs</th><th style="width:22%;text-align:center">Matrices</th></tr></thead><tbody>${rowsHtml}${totalRow}</tbody></table>`;
+      cardsEl.innerHTML = `<div class="rejTableScroller"><table class="rejDataTable rejSummaryTable"><thead><tr><th style="width:34%">Prensa</th><th style="width:24%;text-align:center">Kg</th><th style="width:20%;text-align:center">Pzs</th><th style="width:22%;text-align:center">Matrices</th></tr></thead><tbody>${rowsHtml}</tbody></table></div><table class="rejDataTable rejSummaryTable rejTotalTable"><colgroup><col style="width:34%"><col style="width:24%"><col style="width:20%"><col style="width:22%"></colgroup><tfoot>${totalRow}</tfoot></table>`;
       cardsEl.querySelectorAll("tr[data-press]").forEach(c=>c.onclick=()=>openRechazoPress(c.getAttribute("data-press")));
     }
   }
@@ -3925,5 +4246,115 @@ body{overscroll-behavior-x:none!important;}
   .btn,input[type=date],input[type=text],select,.msBtn{font-size:12px!important;}
   #viewRej .rejAnalisis{gap:5px!important;}
   #viewRej .rejKpiSmart{padding:7px 5px!important;}
+}
+
+/* =========================================================
+   FIX13 — Rechazos: tabla amplia, total visible y compartir configurable
+   ========================================================= */
+body.rej-screen #viewRej.tableWrap{gap:4px!important;padding:7px 9px!important;}
+#viewRej .sectionHdr{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto!important;
+  align-items:center!important;gap:6px!important;min-height:31px!important;margin:0!important;
+}
+#viewRej .sectionHdr .t{font-size:clamp(15px,2.15vh,20px)!important;line-height:1!important;}
+#viewRej .sectionHdr .s,#rejMeta{display:none!important;}
+#viewRej .rejHeaderActions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important;}
+#viewRej .rejHeaderActions .rejMonthBtn{
+  width:auto!important;min-width:78px!important;min-height:30px!important;height:30px!important;padding:0 10px!important;
+  border-radius:13px!important;font-size:10px!important;line-height:1!important;
+}
+#viewRej .rejShareMini{
+  width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;padding:0!important;
+  display:grid!important;place-items:center!important;border-radius:12px!important;border:1px solid rgba(94,242,197,.34)!important;
+  background:linear-gradient(145deg,rgba(94,242,197,.15),rgba(73,183,255,.12))!important;color:#fff!important;
+  box-shadow:0 7px 20px rgba(0,0,0,.20),inset 0 0 0 1px rgba(255,255,255,.04)!important;
+  font:1000 17px/1 system-ui,-apple-system,"Segoe UI",sans-serif!important;cursor:pointer!important;
+}
+#viewRej .rejShareMini:active{transform:scale(.96);}
+#viewRej .rejAnalisis{margin:0!important;gap:5px!important;}
+#viewRej .rejKpiSmart{min-height:47px!important;padding:5px 4px!important;border-radius:14px!important;}
+#viewRej .rejKpiSmart .l{font-size:8px!important;line-height:1!important;}
+#viewRej .rejKpiSmart .v{font-size:clamp(15px,4vw,20px)!important;line-height:1!important;margin-top:2px!important;}
+#viewRej .rejKpiSmart .s{font-size:7.5px!important;line-height:1!important;margin-top:2px!important;}
+#viewRej .rejMotivosInline{height:28px!important;min-height:28px!important;margin:0!important;}
+#viewRej .rejCorrosionChip.fix10CorrCompact,#viewRej .rejCorrosionChip{height:27px!important;min-height:27px!important;}
+#viewRej .rejCards{
+  display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important;
+}
+#viewRej .rejTableScroller{
+  flex:1 1 auto!important;min-height:0!important;overflow:auto!important;overscroll-behavior:contain!important;scrollbar-width:thin!important;
+}
+#viewRej .rejTableScroller .rejDataTable{height:auto!important;min-height:100%!important;table-layout:fixed!important;}
+#viewRej .rejDataTable thead th{position:sticky!important;top:0!important;z-index:4!important;height:31px!important;}
+#viewRej .rejDataTable tbody tr[data-press]{height:clamp(35px,5vh,46px)!important;}
+#viewRej .rejTotalTable{
+  flex:0 0 36px!important;width:100%!important;height:36px!important;min-height:36px!important;table-layout:fixed!important;border-collapse:collapse!important;
+}
+#viewRej .rejCards.hasCorrosion .rejTotalTable{flex:0 0 36px!important;height:36px!important;min-height:36px!important;}
+#viewRej .rejTotalTable tfoot{display:table-footer-group!important;}
+#viewRej .rejTotalTable tfoot .totalRow{height:36px!important;}
+#viewRej .rejTotalTable tfoot td{
+  position:static!important;height:36px!important;padding:0 6px!important;
+  background:linear-gradient(90deg,rgba(18,74,103,.98),rgba(12,70,73,.98))!important;
+  border-top:1px solid rgba(94,242,197,.32)!important;box-shadow:0 -8px 18px rgba(2,11,20,.28)!important;
+}
+
+.rejShareOverlay{
+  position:fixed;inset:0;z-index:12000;display:none;place-items:center;padding:16px;
+  background:rgba(2,8,16,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.rejShareOverlay.open{display:grid;}
+.rejShareDialog.glass{
+  width:min(94vw,560px)!important;max-width:min(94vw,560px)!important;max-height:92dvh!important;overflow:auto!important;
+  padding:17px!important;border-radius:24px!important;border:1px solid rgba(94,242,197,.22)!important;
+  background:linear-gradient(160deg,rgba(10,28,43,.99),rgba(7,42,49,.99))!important;
+  box-shadow:0 30px 85px rgba(0,0,0,.64),inset 0 0 0 1px rgba(255,255,255,.04)!important;
+}
+.rejShareDialogHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.rejShareEyebrow{color:var(--acc2);font-size:9px;font-weight:1000;letter-spacing:.16em;margin-bottom:3px;}
+.rejShareDialog h2{margin:0;color:#fff;font-size:21px;line-height:1.08;}
+.rejShareClose{
+  width:34px;height:34px;min-width:34px;border-radius:12px;border:1px solid rgba(255,255,255,.13);
+  background:rgba(0,0,0,.16);color:#fff;font:900 23px/1 system-ui;cursor:pointer;
+}
+.rejShareIntro{margin:9px 0 13px;color:var(--mut);font-size:12px;font-weight:800;line-height:1.35;}
+.rejShareForm{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.rejShareForm>label,.rejShareRange label{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.rejShareForm>label>span,.rejShareRange label>span{font-size:10px;font-weight:1000;color:#d9ebf5;letter-spacing:.02em;}
+.rejShareForm select,.rejShareForm input[type=date]{
+  width:100%!important;min-width:0!important;height:43px!important;min-height:43px!important;padding:0 10px!important;
+  border-radius:14px!important;border:1px solid rgba(255,255,255,.14)!important;background:rgba(2,13,24,.68)!important;
+  color:#fff!important;font-size:12px!important;font-weight:900!important;color-scheme:dark;
+}
+.rejShareForm>label:nth-child(1),.rejShareForm>label:nth-child(2),.rejShareRange,.rejShareMonthInfo{grid-column:1/-1;}
+.rejShareRange{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.rejShareRange[hidden],.rejShareMonthInfo[hidden]{display:none!important;}
+.rejShareMonthInfo{
+  min-height:43px;display:flex;align-items:center;padding:9px 11px;border-radius:14px;
+  border:1px solid rgba(73,183,255,.18);background:rgba(73,183,255,.08);color:#cfeeff;font-size:11px;font-weight:900;
+}
+.rejShareMsg{min-height:18px;margin-top:9px;color:#ffd780;font-size:11px;font-weight:900;line-height:1.3;}
+.rejShareMsg.bad{color:#ff8b9c;}
+.rejShareActions{display:grid;grid-template-columns:.8fr 1.2fr;gap:9px;margin-top:4px;}
+.rejShareActions .btn{height:43px!important;min-height:43px!important;font-size:11px!important;}
+#modal.rejShareReport .rejShareReportContent .listTable td{
+  white-space:pre-line!important;line-height:1.35!important;vertical-align:top!important;overflow:visible!important;text-overflow:clip!important;
+}
+#modal.rejShareReport .rejShareReportContent .listTable th{white-space:normal!important;line-height:1.15!important;}
+#modal.rejShareReport .modalMeta{white-space:normal!important;line-height:1.35!important;}
+@media(max-width:430px){
+  body.rej-screen #viewRej.tableWrap{padding:6px 8px!important;gap:3px!important;}
+  #viewRej .rejKpiSmart{min-height:44px!important;padding:4px 3px!important;}
+  #viewRej .rejKpiSmart .l{font-size:7.3px!important;}
+  #viewRej .rejKpiSmart .s{font-size:7px!important;}
+  #viewRej .rejDataTable tbody tr[data-press]{height:clamp(34px,4.75vh,43px)!important;}
+  .rejShareDialog.glass{padding:14px!important;border-radius:21px!important;}
+  .rejShareForm{grid-template-columns:1fr;gap:9px;}
+  .rejShareForm>label,.rejShareForm>label:nth-child(1),.rejShareForm>label:nth-child(2),.rejShareRange,.rejShareMonthInfo{grid-column:1/-1;}
+  .rejShareDialog h2{font-size:19px;}
+}
+@media(max-height:700px){
+  #viewRej .rejKpiSmart{min-height:42px!important;}
+  #viewRej .rejDataTable tbody tr[data-press]{height:34px!important;}
 }
 </style>
