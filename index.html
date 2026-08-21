@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>ERP Prensas — Producción + Avance + Rechazos V6.6.3 FIX13</title>
+<title>ERP Prensas — Producción + Avance + Rechazos V6.6.3 FIX14</title>
 <meta name="theme-color" content="#07111f">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -1594,7 +1594,22 @@ document.addEventListener("DOMContentLoaded",function(){
       "Operario","operario","Inspector","inspector","UserName","username","Usuario","usuario",
       "CreatedBy","createdBy","ReportadoPor","reportadoPor","EmpNum","empnum","EmployeeId","employeeId"
     ]);
-    return String(value||"").trim() || "NO INFORMADO";
+    return String(value||"").trim();
+  }
+  function rejectMachine(row){
+    const direct=rejFirstVal(row,[
+      "MachineNameRechazo","machineNameRechazo","MACHINENAMERECHAZO","RejectMachine","rejectMachine",
+      "MaquinaRechazo","maquinaRechazo","MAQUINA_RECHAZO","MaquinaQueRechaza","maquinaQueRechaza",
+      "RejectDepartment","rejectDepartment","DepartamentoRechazo","departamentoRechazo",
+      "maquinaProduccion","MaquinaProduccion","MAQUINAPRODUCCION","maquina_produccion","MAQUINA_PRODUCCION",
+      "MachineNameProduccion","MachineNameProduction","Linea","LINEA","linea","LineName","lineName",
+      "NombreLinea","Nombre_Linea","Department","Departamento","DeptNum","deptnum","DeptName"
+    ]);
+    const raw=String(direct||getLineaRej(row)||"").trim();
+    if(!raw || raw==="-") return "";
+    const machine=shortLineaRej(raw);
+    if(!machine || machine==="-") return "";
+    return normalizeSharePress(raw)===normalizeSharePress(getRejectPress(row)) ? "" : machine;
   }
   function rawDateLabel(row){
     const raw=String(getDateAny(row)||"-").trim();
@@ -1618,9 +1633,9 @@ document.addEventListener("DOMContentLoaded",function(){
   function buildDetailRows(rows){
     const map=new Map();
     rows.forEach(r=>{
-      const press=getRejectPress(r),die=getDieAny(r),order=getRejectOrder(r),motive=getMotivoRej(r),who=rejectedBy(r),date=rawDateLabel(r);
-      const key=[date,press,die,order,motive,who].join("\u241f");
-      if(!map.has(key)) map.set(key,{date,press,die,order,motive,who,PZS:0,KG:0});
+      const press=getRejectPress(r),die=getDieAny(r),order=getRejectOrder(r),motive=getMotivoRej(r),machine=rejectMachine(r),who=rejectedBy(r),date=rawDateLabel(r);
+      const key=[date,press,die,order,motive,machine,who].join("\u241f");
+      if(!map.has(key)) map.set(key,{date,press,die,order,motive,machine,who,PZS:0,KG:0});
       const item=map.get(key); item.PZS+=getRejPzs(r); item.KG+=getRejKg(r);
     });
     const list=[...map.values()].sort((a,b)=>
@@ -1628,8 +1643,8 @@ document.addEventListener("DOMContentLoaded",function(){
       a.order.localeCompare(b.order,"es",{numeric:true}) || a.date.localeCompare(b.date,"es",{numeric:true})
     ).map(x=>({
       IDENTIFICACION:`${shortSharePress(x.press)}\n${x.date}`,
-      TRABAJO:`Matriz: ${x.die}\nOrden: ${x.order}`,
-      REVISION:`${x.motive}\nRechazó: ${x.who}`,
+      TRABAJO:`${x.die}\n${x.order}`,
+      REVISION:[x.motive,x.machine,x.who].filter(Boolean).join("\n"),
       CANTIDAD:`${fmt0(x.PZS)} pzs\n${fmt0(x.KG)} kg`,
       KG:x.KG,PZS:x.PZS
     }));
@@ -1661,11 +1676,11 @@ document.addEventListener("DOMContentLoaded",function(){
     openModalTable(
       `Rechazos para revisión — ${scopeLabel()}`,
       `${period.label} · ${fmt0(report.list.length)} registros agrupados · ${fmt0(report.totalPzs)} pzs · ${fmt0(report.totalKg)} kg`,
-      "Incluye matriz, orden, motivo y responsable. Usa Compartir para enviarlo.",
+      "Incluye matriz, orden, motivo, máquina y responsable cuando está disponible.",
       [
-        {k:"IDENTIFICACION",label:"Prensa · Fecha",align:"left",w:"22%"},
-        {k:"TRABAJO",label:"Matriz · Orden",align:"left",w:"27%"},
-        {k:"REVISION",label:"Motivo · Rechazó",align:"left",w:"35%"},
+        {k:"IDENTIFICACION",label:"Prensa · Fecha",align:"left",w:"20%"},
+        {k:"TRABAJO",label:"Matriz · Orden",align:"left",w:"25%"},
+        {k:"REVISION",label:"Motivo · Máquina · Rechazó",align:"left",w:"39%"},
         {k:"CANTIDAD",label:"Pzs · Kg",align:"right",w:"16%"}
       ],report.list,null
     );
@@ -1794,6 +1809,7 @@ document.addEventListener("DOMContentLoaded",function(){
   <div id="viewRej" class="view tableWrap glass">
     <div class="sectionHdr">
       <div class="t">Rechazos</div>
+      <div class="rejMotivosInline" id="rejMotivosInline"></div>
       <div class="rejHeaderActions">
         <button id="btnRejMonth" class="btn rejModeBtn rejMonthBtn">VER MES</button>
         <button id="btnShareRejConfig" class="rejShareMini" title="Preparar información para compartir" aria-label="Preparar información de rechazos para compartir">↗</button>
@@ -1807,8 +1823,6 @@ document.addEventListener("DOMContentLoaded",function(){
       <div class="rejKpiSmart acc"><div class="l">Matrices</div><div class="v" id="r_matrices_day">0</div><div class="s">matrices afectadas</div></div>
       <div class="rejKpiSmart ok"><div class="l">Prensa crítica</div><div class="v" id="r_critical_press">—</div><div class="s" id="r_critical_press_s">0 kg</div></div>
     </div>
-
-    <div class="rejMotivosInline" id="rejMotivosInline"></div>
 
     <div class="rejNavHint">
       <span><b>Navega:</b> Prensa → Matriz → Orden → Detalle.</span>
@@ -3193,6 +3207,7 @@ function renderRechazos(){
     if(!activePivot.length){
       cardsEl.innerHTML = `<div class="rejEmpty">Sin rechazos de prensa para el filtro actual.</div>`;
       cardsEl.style.setProperty('--rejRowsTotal', '1');
+      cardsEl.style.setProperty('--rejRowsData', '1');
     }else{
       const rowsHtml = activePivot.map(r=>{
         const mats=uniqCount(r.rows, rr=>{ const d=getDieAny(rr); return d&&d!=="-"?d:"SIN MATRIZ"; });
@@ -3205,6 +3220,7 @@ function renderRechazos(){
       }).join("");
       const totalRow = `<tr class="totalRow"><td class="press">TOTAL</td><td class="num kg">${fmt0(sumKg)}</td><td class="num pzs">${fmt0(sumPzs)}</td><td class="num mats">${fmt0(matricesTotal)}</td></tr>`;
       cardsEl.style.setProperty('--rejRowsTotal', String(Math.max(1, activePivot.length+1)));
+      cardsEl.style.setProperty('--rejRowsData', String(Math.max(1, activePivot.length)));
       cardsEl.innerHTML = `<div class="rejTableScroller"><table class="rejDataTable rejSummaryTable"><thead><tr><th style="width:34%">Prensa</th><th style="width:24%;text-align:center">Kg</th><th style="width:20%;text-align:center">Pzs</th><th style="width:22%;text-align:center">Matrices</th></tr></thead><tbody>${rowsHtml}</tbody></table></div><table class="rejDataTable rejSummaryTable rejTotalTable"><colgroup><col style="width:34%"><col style="width:24%"><col style="width:20%"><col style="width:22%"></colgroup><tfoot>${totalRow}</tfoot></table>`;
       cardsEl.querySelectorAll("tr[data-press]").forEach(c=>c.onclick=()=>openRechazoPress(c.getAttribute("data-press")));
     }
@@ -4356,5 +4372,82 @@ body.rej-screen #viewRej.tableWrap{gap:4px!important;padding:7px 9px!important;}
 @media(max-height:700px){
   #viewRej .rejKpiSmart{min-height:42px!important;}
   #viewRej .rejDataTable tbody tr[data-press]{height:34px!important;}
+}
+
+/* =========================================================
+   FIX14 — 10 prensas sin scroll + corrosión en encabezado + reporte compacto
+   ========================================================= */
+body.rej-screen #viewRej.tableWrap{gap:3px!important;padding:6px 8px!important;}
+#viewRej .sectionHdr{
+  grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-rows:30px!important;
+  gap:5px!important;min-height:30px!important;height:30px!important;
+}
+#viewRej .sectionHdr .t{font-size:15px!important;white-space:nowrap!important;}
+#viewRej .sectionHdr .rejMotivosInline{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;justify-self:start!important;
+  width:100%!important;max-width:138px!important;min-width:0!important;height:28px!important;min-height:28px!important;margin:0!important;overflow:hidden!important;
+}
+#viewRej .sectionHdr .rejCorrosionChip.fix10CorrCompact,#viewRej .sectionHdr .rejCorrosionChip{
+  width:100%!important;max-width:138px!important;min-width:0!important;height:27px!important;min-height:27px!important;
+  flex:1 1 auto!important;grid-template-columns:auto minmax(0,1fr)!important;gap:4px!important;padding:0 6px!important;border-radius:12px!important;
+}
+#viewRej .sectionHdr .rejCorrosionChip .ico{width:17px!important;height:17px!important;font-size:9px!important;border-radius:6px!important;}
+#viewRej .sectionHdr .rejCorrosionChip>span:nth-child(2){min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;}
+#viewRej .sectionHdr .rejCorrosionChip b{font-size:8px!important;}
+#viewRej .sectionHdr .rejCorrosionChip strong{font-size:11.5px!important;}
+#viewRej .sectionHdr .rejCorrosionChip em{font-size:6.5px!important;}
+#viewRej .sectionHdr .rejCorrosionChip .go{display:none!important;}
+#viewRej .rejHeaderActions{gap:5px!important;}
+#viewRej .rejHeaderActions .rejMonthBtn{min-width:70px!important;height:28px!important;min-height:28px!important;padding:0 8px!important;font-size:9.5px!important;}
+#viewRej .rejShareMini{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;border-radius:11px!important;font-size:15px!important;}
+#viewRej .rejAnalisis{gap:4px!important;margin:0!important;}
+#viewRej .rejKpiSmart{height:40px!important;min-height:40px!important;padding:3px 3px!important;border-radius:12px!important;}
+#viewRej .rejKpiSmart .l{font-size:7.2px!important;line-height:1!important;}
+#viewRej .rejKpiSmart .v{font-size:clamp(14px,3.8vw,18px)!important;line-height:1!important;margin-top:1px!important;}
+#viewRej .rejKpiSmart .s{font-size:6.8px!important;line-height:1!important;margin-top:1px!important;}
+#viewRej .rejTableScroller{overflow:hidden!important;overscroll-behavior:none!important;scrollbar-width:none!important;}
+#viewRej .rejTableScroller::-webkit-scrollbar{display:none!important;}
+#viewRej .rejTableScroller .rejDataTable{height:auto!important;min-height:0!important;}
+#viewRej .rejDataTable thead,#viewRej .rejDataTable thead th{height:28px!important;min-height:28px!important;}
+#viewRej .rejDataTable thead th{font-size:10.5px!important;padding:0 4px!important;}
+#viewRej .rejTableScroller .rejDataTable tbody tr[data-press]{height:clamp(26px,3.7vh,29px)!important;min-height:0!important;}
+#viewRej .rejDataTable th,#viewRej .rejDataTable td{padding-left:4px!important;padding-right:4px!important;line-height:1!important;}
+#viewRej .rejDataTable .press{font-size:clamp(10.5px,3.2vw,12.5px)!important;}
+#viewRej .rejDataTable .kg{font-size:clamp(11px,3.3vw,13px)!important;}
+#viewRej .rejDataTable .pzs,#viewRej .rejDataTable .mats{font-size:clamp(9.5px,2.8vw,11px)!important;}
+#viewRej .rejTotalTable,#viewRej .rejCards.hasCorrosion .rejTotalTable{flex:0 0 33px!important;height:33px!important;min-height:33px!important;}
+#viewRej .rejTotalTable tfoot .totalRow,#viewRej .rejTotalTable tfoot td{height:33px!important;}
+
+#modal.rejShareReport .modalHead{
+  display:grid!important;grid-template-columns:1fr!important;gap:6px!important;padding:8px!important;align-items:center!important;
+}
+#modal.rejShareReport #modalTitle{font-size:clamp(16px,4.7vw,20px)!important;line-height:1.08!important;}
+#modal.rejShareReport .modalHead>div:last-child{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;width:100%!important;flex-wrap:nowrap!important;
+}
+#modal.rejShareReport #btnBack{display:none!important;}
+#modal.rejShareReport .modalHead .btnMini,#modal.rejShareReport .modalHead .close{
+  width:100%!important;height:34px!important;min-height:34px!important;padding:0 6px!important;border-radius:12px!important;font-size:10.5px!important;
+}
+#modal.rejShareReport .modalMeta{font-size:10.5px!important;line-height:1.25!important;padding:1px 9px 7px!important;}
+#modal.rejShareReport .modalHint{display:none!important;}
+#modal.rejShareReport .modalFoot{display:none!important;}
+#modal.rejShareReport .listWrap{flex:1 1 auto!important;min-height:0!important;margin-bottom:8px!important;border-radius:14px!important;}
+#modal.rejShareReport .rejShareReportContent .listTable{font-size:11px!important;}
+#modal.rejShareReport .rejShareReportContent .listTable th,#modal.rejShareReport .rejShareReportContent .listTable td{padding:6px 4px!important;}
+#modal.rejShareReport .rejShareReportContent .listTable td{line-height:1.28!important;}
+@media(max-width:370px){
+  #viewRej .sectionHdr{gap:4px!important;}
+  #viewRej .sectionHdr .rejMotivosInline{max-width:124px!important;}
+  #viewRej .sectionHdr .rejCorrosionChip.fix10CorrCompact,#viewRej .sectionHdr .rejCorrosionChip{max-width:124px!important;padding:0 5px!important;}
+  #viewRej .sectionHdr .rejCorrosionChip b{font-size:7.5px!important;}
+  #viewRej .rejHeaderActions .rejMonthBtn{min-width:64px!important;padding:0 6px!important;font-size:9px!important;}
+  #viewRej .rejKpiSmart{height:38px!important;min-height:38px!important;}
+}
+@media(max-height:700px){
+  #viewRej .rejKpiSmart{height:37px!important;min-height:37px!important;}
+  #viewRej .rejTableScroller .rejDataTable tbody tr[data-press]{height:25px!important;}
+  #viewRej .rejTotalTable,#viewRej .rejCards.hasCorrosion .rejTotalTable{flex-basis:31px!important;height:31px!important;min-height:31px!important;}
+  #viewRej .rejTotalTable tfoot .totalRow,#viewRej .rejTotalTable tfoot td{height:31px!important;}
 }
 </style>
