@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>ERP Prensas — Producción + Avance + Rechazos V6.6.3 FIX11 PUENTE</title>
+<title>ERP Prensas — Producción + Avance + Rechazos V6.6.3 FIX12</title>
 <meta name="theme-color" content="#07111f">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -1181,10 +1181,9 @@
 
 
 
-/* ===== FIX4 Rechazos: vista tipo tabla ERP + quien rechaza + compartir ===== */
+/* ===== FIX4 Rechazos: vista tipo tabla ERP + quien rechaza ===== */
 #viewRej .rejMonthOnly{justify-content:space-between!important;gap:8px!important;margin-top:-2px!important;margin-bottom:7px!important;}
-#viewRej .rejMonthBtn,#viewRej .rejShareBtn{width:auto!important;min-width:96px!important;padding:0 12px!important;height:34px!important;min-height:34px!important;border-radius:14px!important;font-size:10.5px!important;}
-#viewRej .rejShareBtn{border-color:rgba(94,242,197,.34)!important;background:linear-gradient(180deg,rgba(94,242,197,.15),rgba(255,255,255,.035))!important;color:var(--txt)!important;}
+#viewRej .rejMonthBtn{width:auto!important;min-width:96px!important;padding:0 12px!important;height:34px!important;min-height:34px!important;border-radius:14px!important;font-size:10.5px!important;}
 #viewRej .rejCards{display:block!important;flex:1 1 auto!important;min-height:0!important;overflow:auto!important;padding:0!important;border-radius:18px!important;border:1px solid var(--stroke2)!important;background:rgba(0,0,0,.12)!important;}
 .rejDataTable{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;}
 .rejDataTable th{position:sticky;top:0;z-index:2;background:rgba(5,15,27,.96);color:var(--txt);font-weight:1000;text-align:left;border-bottom:1px solid var(--stroke2);padding:8px 6px;white-space:nowrap;}
@@ -1202,7 +1201,7 @@
 .rejCorrosionMini i{font-style:normal;font-weight:1000;color:#fff;border:1px solid rgba(255,255,255,.13);border-radius:999px;padding:5px 8px;background:rgba(0,0,0,.16);}
 #viewRej .rejEmpty{display:grid!important;place-items:center!important;min-height:110px!important;border-radius:18px!important;border:1px dashed rgba(255,255,255,.16)!important;margin:8px!important;}
 @media(max-width:760px){
-  #viewRej .rejMonthBtn,#viewRej .rejShareBtn{height:30px!important;min-height:30px!important;font-size:9.5px!important;min-width:84px!important;padding:0 8px!important;}
+  #viewRej .rejMonthBtn{height:30px!important;min-height:30px!important;font-size:9.5px!important;min-width:84px!important;padding:0 8px!important;}
   .rejDataTable{font-size:10.4px!important;}
   .rejDataTable th{padding:6px 4px!important;font-size:10px!important;}
   .rejDataTable td{padding:6px 4px!important;}
@@ -1224,12 +1223,10 @@ body.rej-screen #viewRej.tableWrap{
 #viewRej .sectionHdr .t{font-size:clamp(16px,2.3vh,24px)!important;}
 #viewRej .sectionHdr .s{font-size:clamp(10px,1.45vh,13px)!important;text-align:right!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
 #viewRej .rejMonthOnly{height:auto!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;margin:0!important;padding:0!important;}
-#viewRej .rejMonthBtn,#viewRej .rejShareBtn{
+#viewRej .rejMonthBtn{
   min-height:32px!important;height:32px!important;min-width:0!important;width:auto!important;border-radius:999px!important;
   padding:0 12px!important;font-size:clamp(9px,1.35vh,12px)!important;letter-spacing:.1px!important;
 }
-#viewRej .rejShareBtn{min-width:42px!important;font-size:0!important;position:relative!important;}
-#viewRej .rejShareBtn::before{content:'📤';font-size:18px;line-height:1;}
 #viewRej .rejAnalisis{
   display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;margin:0!important;flex:0 0 auto!important;
 }
@@ -1282,7 +1279,7 @@ body.rej-screen #viewRej.tableWrap{
 .listTable th,.listTable td{padding:clamp(7px,1.1vh,11px) clamp(5px,1vw,10px)!important;}
 @media(max-height:740px){
   #viewRej .rejKpiSmart{min-height:45px!important;padding:6px!important;}
-  #viewRej .rejMonthBtn,#viewRej .rejShareBtn{height:28px!important;min-height:28px!important;}
+  #viewRej .rejMonthBtn{height:28px!important;min-height:28px!important;}
   #viewRej .sectionHdr .t{font-size:15px!important;}
   .rejDataTable thead{height:29px!important}.rejDataTable th{height:29px!important;}
   .rejDataTable tbody tr{height:calc((100% - 29px) / var(--rejRowsTotal, 10))!important;}
@@ -1349,10 +1346,8 @@ body.rej-screen #viewRej.tableWrap{
 
 
 /* ===== FIX8: Corrosión compacta + más espacio para tabla de rechazos ===== */
-#viewRej .rejControlBar{grid-template-columns:minmax(96px,130px) minmax(52px,70px)!important;justify-content:end!important;gap:8px!important;margin:4px 8px 5px!important;}
+#viewRej .rejControlBar{grid-template-columns:minmax(96px,130px)!important;justify-content:end!important;gap:8px!important;margin:4px 8px 5px!important;}
 #viewRej .rejMonthBtn{min-height:34px!important;height:34px!important;font-size:clamp(10px,1.45vh,12px)!important;padding:0 10px!important;border-radius:15px!important;}
-#viewRej .rejShareBtn{min-height:34px!important;height:34px!important;width:56px!important;font-size:0!important;padding:0!important;border-radius:16px!important;position:relative!important;}
-#viewRej .rejShareBtn::after{content:'📤';font-size:20px;line-height:1;}
 #viewRej .rejAnalisis{margin-top:2px!important;gap:7px!important;}
 #viewRej .rejKpiSmart{min-height:58px!important;padding:7px 6px!important;}
 #viewRej .rejKpiSmart .l{font-size:clamp(8px,1.15vh,10.5px)!important;}
@@ -1531,7 +1526,6 @@ body.adv-screen #btnA4Prod{display:none!important;}
 
     <div class="rejControlBar rejControlBarSlim rejMonthOnly">
       <button id="btnRejMonth" class="btn rejModeBtn rejMonthBtn">VER MES</button>
-      <button id="btnShareRej" class="btn rejModeBtn rejShareBtn">COMPARTIR</button>
     </div>
 
     <div class="rejAnalisis">
@@ -2837,7 +2831,6 @@ function renderRechazos(){
   updateMeta(); buildRechazos();
   const isMonth=rejPeriod==="MONTH";
   if($("btnRejMonth")){ $("btnRejMonth").classList.toggle("active",isMonth); $("btnRejMonth").textContent = isMonth ? "VER DÍA" : "VER MES"; }
-  if($("btnShareRej")){ $("btnShareRej").title="Compartir rechazos actuales"; $("btnShareRej").setAttribute("aria-label","Compartir rechazos actuales"); }
   const activePivot = rejPivot.map(x=>({ ...x, kg:isMonth?x.monthKg:x.dayKg, pzs:isMonth?x.monthPzs:x.dayPzs, rows:isMonth?x.monthRows:x.dayRows }))
     .filter(x=>x.kg||x.pzs).sort((a,b)=>b.kg-a.kg||b.pzs-a.pzs||a.press.localeCompare(b.press,"es",{numeric:true}));
   const activeRows = activeRejRows(false);
@@ -3028,27 +3021,6 @@ async function openRejectTraceFromRows(rawRowsList, label="rechazo"){
     ], top, null);
   }catch(e){ hideLoading(); alert("No pude buscar trazabilidad: "+(e?.message||e)); }
 }
-
-function openRechazosShareView(){
-  buildRechazos();
-  const isMonth=rejPeriod==="MONTH";
-  const activePivot = rejPivot.map(x=>({ ...x, kg:isMonth?x.monthKg:x.dayKg, pzs:isMonth?x.monthPzs:x.dayPzs, rows:isMonth?x.monthRows:x.dayRows }))
-    .filter(x=>x.kg||x.pzs).sort((a,b)=>b.kg-a.kg||b.pzs-a.pzs||a.press.localeCompare(b.press,"es",{numeric:true}));
-  const matrixRows=[];
-  for(const p of activePivot){
-    const gs=groupRejectRows(p.rows, r=>{ const d=getDieAny(r); return d&&d!=="-"?d:"SIN MATRIZ / USAR ORDEN"; }, "MATRIZ");
-    for(const g of gs){ matrixRows.push({PRENSA:p.press,MATRIZ:g.MATRIZ,KG:g.Kg,PZS:g.Pzs,MOTIVO:g.TopMotivo,LINEA:g.TopLinea}); }
-  }
-  openModalTable(`📤 Rechazos para compartir — ${prodFilterLabelFull()}`,`${periodLabel()}: ${prettyDate(fechaSel)} | Matrices: ${fmt0(matrixRows.length)} | Kg: ${fmt0(matrixRows.reduce((s,x)=>s+x.KG,0))}`,`Vista lista para enviar al supervisor. Usa el botón Compartir de arriba.`,[
-    {k:"PRENSA",label:"Prensa",align:"left",w:"17%"},
-    {k:"MATRIZ",label:"Matriz",align:"left",w:"21%"},
-    {k:r=>fmt0(r.KG),label:"Kg",align:"right",w:"13%"},
-    {k:r=>fmt0(r.PZS||0),label:"Pzs",align:"right",w:"10%"},
-    {k:r=>shortMotivo(r.MOTIVO),label:"Motivo",align:"left",w:"25%"},
-    {k:"LINEA",label:"Máq.",align:"left",w:"14%"}
-  ], matrixRows, null);
-}
-$("btnShareRej")?.addEventListener("click", openRechazosShareView);
 
 $("btnRejMonth")?.addEventListener("click",async()=>{
   rejPeriod = rejPeriod==="MONTH" ? "DAY" : "MONTH";
@@ -3499,7 +3471,7 @@ elFecha.value=fechaSel; setViewMode(viewMode); refreshAllMulti(); /* cargarProd(
       badgeDate.textContent=prettyDate(fechaSel);
     };
     setFiltroProd = function(f){
-      filtroProd=f||"ALL";
+      filtroProd=["A1","A3","A4"].includes(f) ? f : "ALL";
       ["btnA1Prod","btnA3Prod","btnA4Prod"].forEach(id=>$(id)?.classList.remove("active"));
       if(filtroProd==="A1") $("btnA1Prod")?.classList.add("active");
       if(filtroProd==="A3") $("btnA3Prod")?.classList.add("active");
@@ -3513,15 +3485,19 @@ elFecha.value=fechaSel; setViewMode(viewMode); refreshAllMulti(); /* cargarProd(
 
   // Rechazos: solo prensas oficiales A1/A3 y A4 para toda prensa nueva, incluyendo 7-11S.
   try{
-    rejectAreaOk = function(press){ return areaOkV9(press,filtroProd); };
+    rejectAreaOk = function(press){
+      const normalizada=normalizePressKeyFix9(press);
+      if(filtroProd==="A1" || filtroProd==="A3" || filtroProd==="A4") return areaOkV9(normalizada,filtroProd);
+      return validPressV9(normalizada);
+    };
     prodAreaRows = function(rows){
       if(filtroProd==="A1" || filtroProd==="A3" || filtroProd==="A4") return rows.filter(r=>areaOkV9(r.MachineName||r.machineName||r.machine||"",filtroProd));
-      return rows.filter(r=>areaOkV9(r.MachineName||r.machineName||r.machine||"","ALL"));
+      return rows.filter(r=>validPressV9(normalizePressKeyFix9(r.MachineName||r.machineName||r.machine||"")));
     };
     getRejectPress = function(r){ return normalizePressKeyFix9(rejFirstVal(r,["MachineNameProgramada","machineNameProgramada","MACHINENAMEPROGRAMADA","MachineName_Programada","maquinaProgramada","MaquinaProgramada","Maquina_Programada","PrensaProgramada","prensaProgramada","Prensa","prensa","press","MachineName","machineName","Maquina","maquina","MaquinaExtrusion","PrensaExtrusion"])); };
     isPressAssignedRejection = function(r){
       const motivo=getMotivoRej(r);
-      return isPressMotivoAsignado(motivo) && areaOkV9(getRejectPress(r),filtroProd);
+      return isPressMotivoAsignado(motivo) && rejectAreaOk(getRejectPress(r));
     };
   }catch(e){ console.warn("FIX9 rechazos filtros", e); }
 
